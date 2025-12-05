@@ -19,8 +19,7 @@
 </p>
 
 <h2>🖼 채점 화면 예시</h2>
-<img src="https://github.com/user-attachments/assets/b176d888-8322-4103-b791-4691832bacaa" alt="채점 화면" width="800"><br>
-<img src="https://github.com/user-attachments/assets/8a09c4d3-c8e0-454e-bb36-6d734a806d0c" alt="테스트 결과 예시" width="400">
+<img width="495" height="442" alt="image" src="https://github.com/user-attachments/assets/4cbe2a05-997c-4479-a9b4-876c106c79d1" />
 
 <p>강의 문제 풀이를 <code>solution.py</code>에 작성하면, 이 프로그램이 자동으로 테스트하고 결과를 보여줍니다.</p>
 
