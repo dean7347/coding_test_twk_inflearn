@@ -2,7 +2,6 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>파이썬 알고리즘 문제풀이 채점기</title>
 </head>
 <body>
 
