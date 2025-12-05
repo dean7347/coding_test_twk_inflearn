@@ -5,6 +5,7 @@ from io import StringIO
 import builtins
 import time
 import tracemalloc
+import os
 
 # 0 = 전체 테스트 실행, 1 = 1번 테스트만 실행
 RUN_FLAG = 0
@@ -49,7 +50,18 @@ def format_memory(bytes_val: int) -> str:
 def run_test(i: int):
     """in{i}.txt로부터 입력을 받아 solution()을 실행하고, out{i}.txt와 비교"""
     # 표준 입력을 inX.txt로 변경
-    sys.stdin = open(f"in{i}.txt", "r", encoding="utf-8")
+    input_file = f"in{i}.txt"
+    output_file = f"out{i}.txt"
+
+    if not os.path.exists(input_file) or not os.path.exists(output_file):
+        print(f"[TEST {i}] {Colors.RED}ERROR{Colors.ENDC} - 입력/출력 파일이 존재하지 않습니다.")
+        return False, None, None, None, None, None, None
+
+    sys.stdin = open(input_file, "r", encoding="utf-8")
+
+    # 입력 크기 측정
+    with open(input_file, "r", encoding="utf-8") as f:
+        input_size = sum(len(line) for line in f)
 
     # 표준 출력 캡처
     output_capture = StringIO()
@@ -70,7 +82,7 @@ def run_test(i: int):
         builtins.print = original_print
         tracemalloc.stop()
         print(f"[TEST {i}] {Colors.RED}ERROR{Colors.ENDC} - {e}")
-        return False, None, None, None, None
+        return False, None, None, None, None, None, None
 
     end_time = time.perf_counter()
     current_mem, peak_mem = tracemalloc.get_traced_memory()
@@ -79,69 +91,56 @@ def run_test(i: int):
     # 출력 복원
     builtins.print = original_print
     result = output_capture.getvalue().rstrip("\n")
+    output_size = len(result)
 
     # 기대값 읽기
-    try:
-        with open(f"out{i}.txt", "r", encoding="utf-8") as f:
-            expected = f.read().rstrip("\n")
-    except UnicodeDecodeError as e:
-        print(f"[ERROR] 파일 읽기 실패: out{i}.txt")
-        raise e
+    with open(output_file, "r", encoding="utf-8") as f:
+        expected = f.read().rstrip("\n")
 
-    # 결과 비교
     passed = (result == expected)
     exec_time_ms = (end_time - start_time) * 1000
 
-    return passed, exec_time_ms, peak_mem, result, expected
+    return passed, exec_time_ms, peak_mem, result, expected, input_size, output_size
 
 
-def print_test_report(i: int, passed: bool, exec_time_ms: float, peak_mem: int, user_output: str, expected_output: str):
+def print_test_report(i, passed, exec_time_ms, peak_mem, user_output, expected_output, input_size, output_size):
     bar = "=" * 60
     print(f"\n{Colors.BOLD}{bar}{Colors.ENDC}")
     status = f"{Colors.GREEN}PASS{Colors.ENDC}" if passed else f"{Colors.RED}FAIL{Colors.ENDC}"
     print(f"[TEST {i}] {status}")
 
-    if exec_time_ms is not None and peak_mem is not None:
-        print(f"{Colors.CYAN}  ⏱ 실행 시간{Colors.ENDC}: {exec_time_ms:.3f} ms")
-        print(f"{Colors.CYAN}  🧠 피크 메모리{Colors.ENDC}: {format_memory(peak_mem)}")
-        print(f"{Colors.CYAN}  📈 추정 복잡도{Colors.ENDC}: {estimate_complexity(exec_time_ms)}")
+    print(f"{Colors.CYAN}  📥 입력 크기{Colors.ENDC}: {input_size} bytes")
+    print(f"{Colors.CYAN}  📤 출력 크기{Colors.ENDC}: {output_size} bytes")
 
-    # 사용자 출력과 정답 표시
+    print(f"{Colors.CYAN}  ⏱ 실행 시간{Colors.ENDC}: {exec_time_ms:.3f} ms")
+    print(f"{Colors.CYAN}  🧠 피크 메모리{Colors.ENDC}: {format_memory(peak_mem)}")
+    print(f"{Colors.CYAN}  📈 추정 복잡도{Colors.ENDC}: {estimate_complexity(exec_time_ms)}")
+
     print(f"{Colors.YELLOW}  ▶ 사용자 출력{Colors.ENDC}: {user_output}")
     print(f"{Colors.GREEN}  ▶ 정답      {Colors.ENDC}: {expected_output}")
-
     print(f"{Colors.BOLD}{bar}{Colors.ENDC}")
 
 
 def main():
-    print(f"{Colors.HEADER}{Colors.BOLD}=== 코딩테스트 로컬 채점기 v2.0 ==={Colors.ENDC}\n")
+    print(f"{Colors.HEADER}{Colors.BOLD}=== 코딩테스트 로컬 채점기 -made by RECON7347 ==={Colors.ENDC}\n")
 
     total_pass = 0
     total_time = 0.0
     max_mem = 0
 
-    if RUN_FLAG == 1:
-        passed, t, m, user_output, expected_output = run_test(1)
+    test_range = [1] if RUN_FLAG == 1 else range(1, TOTAL_TEST + 1)
+
+    for i in test_range:
+        print(f"Running TEST {i}...")
+        passed, t, m, user_output, expected_output, input_size, output_size = run_test(i)
         if passed is not None:
-            print_test_report(1, passed, t, m, user_output, expected_output)
+            print_test_report(i, passed, t, m, user_output, expected_output, input_size, output_size)
             if passed:
                 total_pass += 1
             if t is not None:
                 total_time += t
             if m is not None:
                 max_mem = max(max_mem, m)
-    else:
-        for i in range(1, TOTAL_TEST + 1):
-            print(f"Running TEST {i}...")
-            passed, t, m, user_output, expected_output = run_test(i)
-            if passed is not None:
-                print_test_report(i, passed, t, m, user_output, expected_output)
-                if passed:
-                    total_pass += 1
-                if t is not None:
-                    total_time += t
-                if m is not None:
-                    max_mem = max(max_mem, m)
 
     # 요약 출력
     print("\n====== SUMMARY ======")
@@ -149,7 +148,6 @@ def main():
         print(f"{Colors.GREEN}ALL PASS!{Colors.ENDC}")
     else:
         print(f"{Colors.YELLOW}{total_pass}/{TOTAL_TEST} PASSED{Colors.ENDC}")
-
     print(f"총 실행 시간: {total_time:.3f} ms")
     print(f"최대 피크 메모리: {format_memory(max_mem)}")
     print("=====================")
