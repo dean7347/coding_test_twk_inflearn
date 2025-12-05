@@ -81,8 +81,12 @@ def run_test(i: int):
     result = output_capture.getvalue().rstrip("\n")
 
     # 기대값 읽기
-    with open(f"out{i}.txt", "r", encoding="utf-8") as f:
-        expected = f.read().rstrip("\n")
+    try:
+        with open(f"out{i}.txt", "r", encoding="utf-8") as f:
+            expected = f.read().rstrip("\n")
+    except UnicodeDecodeError as e:
+        print(f"[ERROR] 파일 읽기 실패: out{i}.txt")
+        raise e
 
     # 결과 비교
     passed = (result == expected)
