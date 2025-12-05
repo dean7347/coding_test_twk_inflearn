@@ -122,7 +122,7 @@ def print_test_report(i, passed, exec_time_ms, peak_mem, user_output, expected_o
 
 
 def main():
-    print(f"{Colors.HEADER}{Colors.BOLD}=== 코딩테스트 로컬 채점기 -made by RECON7347 ==={Colors.ENDC}\n")
+    print(f"{Colors.HEADER}{Colors.BOLD}=== 코딩테스트 로컬 채점기 -made by dean7347 ==={Colors.ENDC}\n")
 
     total_pass = 0
     total_time = 0.0
